@@ -1,5 +1,7 @@
 package com.neven.my_custom_queue_collection;
 
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -27,9 +29,9 @@ public class MyCustomQueueCollection<T> implements Collection<T>{
     }
 
     @Override
-    public boolean contains(Object o) {
+    public boolean contains(Object object) {
         for (int i = 0; i < this.size(); i ++) {
-            if (this.myCustomQueueCollection[i].equals(o)) {
+            if (this.myCustomQueueCollection[i] != null && this.myCustomQueueCollection[i].equals(object)) {
                 return true;
             }
         }
@@ -38,17 +40,17 @@ public class MyCustomQueueCollection<T> implements Collection<T>{
 
     @Override
     public Iterator iterator() {
-        return null;
+        return new Iterators.Array<>(myCustomQueueCollection);
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return myCustomQueueCollection;
     }
 
     @Override
-    public Object[] toArray(Object[] a) {
-        return this.myCustomQueueCollection;
+    public Object[] toArray(Object[] objectArray) {
+        return objectArray;
     }
 
     @Override
@@ -66,8 +68,14 @@ public class MyCustomQueueCollection<T> implements Collection<T>{
     @Override
     public boolean remove(Object o) {
         for (int i = 0; i < this.size(); i++) {
-            if (this.myCustomQueueCollection[i].equals(o)) {
-                this.myCustomQueueCollection[i] = null;
+            if (this.myCustomQueueCollection[i]!= null && this.myCustomQueueCollection[i].equals(o)) {
+                for (int j = i; j >= 0; j--) {
+                    if (j == 0) {
+                        myCustomQueueCollection[j] = null;
+                    } else {
+                        myCustomQueueCollection[j] = myCustomQueueCollection[j - 1];
+                    }
+                }
                 return true;
             }
         }
@@ -75,29 +83,62 @@ public class MyCustomQueueCollection<T> implements Collection<T>{
     }
 
     @Override
-    public boolean containsAll(Collection c) {
-        return false;
+    public boolean containsAll(Collection collection) {
+       boolean contains = true;
+        for (Object object : collection) {
+            if (object != null && !this.contains(object)) {
+                contains = false;
+            }
+        }
+        return contains;
     }
 
     @Override
-    public boolean addAll(Collection c) {
-
-        return false;
+    public boolean addAll(Collection<? extends T> collection) {
+        boolean elementAdded = false;
+        for (T object : collection) {
+            if (object != null) {
+                this.add(object);
+                elementAdded = true;
+            }
+        }
+        return elementAdded;
     }
 
     @Override
-    public boolean removeAll(Collection c) {
-        return false;
+    public boolean removeAll(Collection collection) {
+        boolean remove = false;
+        for (Object object : collection) {
+            this.remove(object);
+            remove = true;
+        }
+        return remove;
     }
 
     @Override
-    public boolean retainAll(Collection c) {
-        return false;
+    public boolean retainAll(Collection enteredCollection) {
+        MyCustomQueueCollection<T> temporaryArray = new MyCustomQueueCollection<>(this.size());
+        for (T element : this) {
+            temporaryArray.add(element);
+        }
+        this.clear();
+        boolean retained = false;
+        for (T element : temporaryArray) {
+            for (Object object : enteredCollection) {
+                if (element != null && object != null && element.equals(object)) {
+                    this.add(element);
+                    retained = true;
+                }
+            }
+        }
+        return retained;
     }
 
     @Override
     public void clear() {
-
+        for (int i = 0; i < this.myCustomQueueCollection.length; i++) {
+            myCustomQueueCollection[i] = null;
+        }
     }
 
     @Override
@@ -105,5 +146,21 @@ public class MyCustomQueueCollection<T> implements Collection<T>{
         return Arrays.toString(myCustomQueueCollection);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        MyCustomQueueCollection<?> that = (MyCustomQueueCollection<?>) obj;
 
+        return Arrays.equals(myCustomQueueCollection, that.myCustomQueueCollection);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(myCustomQueueCollection);
+    }
 }
